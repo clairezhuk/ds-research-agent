@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Research Agent</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-top: 40px;
+      text-align: center;
+    }
+    #button-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    #output, #settings {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto 0 auto;
+      text-align: center;
+    }
+    button {
+      margin: 0;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    form label {
+      width: 100%;
+      max-width: 400px;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Research Agent</h1>
+  
+  <div id="button-row">
+    <button onclick="loadNews()">📰 News</button>
+    <button onclick="askAI()">🤖 What do you need to know?</button>
+    <button onclick="loadJobs()">💼 Jobs possibilities</button>
+    <button onclick="showSettings()">⚙️ Settings</button>
+  </div>
+  
+  <div id="output"></div>
+  <div id="settings" style="display:none; margin-top:20px;">
+    <h3>Settings</h3>
+    <form id="settingsForm" onsubmit="saveSettings(event)">
+      <label>
+        News count:
+        <input type="number" id="newsCount" name="newsCount" min="1" value="2">
+      </label><br>
+      <label>
+        Jobs count:
+        <input type="number" id="jobsCount" name="jobsCount" min="1" value="2">
+      </label><br>
+      <label>
+        Text for AI analysis:<br>
+        <textarea id="aiText" name="aiText" rows="3" cols="40"></textarea>
+      </label><br>
+      <button type="submit">Save</button>
+    </form>
+  </div>
+  
+  <script>
+    let settings = {
+      newsCount: 2,
+      jobsCount: 2,
+      aiText: ""
+    };
+
+    async function loadNews() {
+      hideSettings();
+      const res = await fetch(`http://localhost:8000/news?count=${settings.newsCount}`);
+      const data = await res.json();
+      document.getElementById("output").innerHTML = 
+        data.news.map(n => `<p><b>${n[0]}</b> - ${n[1]} <a href="${n[2]}">link</a></p>`).join("");
+    }
+
+    async function askAI() {
+      hideSettings();
+      const text = settings.aiText || "Here are some recent ML/AI articles ...";
+      const res = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      document.getElementById("output").innerText = data.result;
+    }
+
+    async function loadJobs() {
+      hideSettings();
+      const res = await fetch(`http://localhost:8000/jobs?count=${settings.jobsCount}`);
+      const data = await res.json();
+      document.getElementById("output").innerHTML = 
+        data.jobs.map(j => `<p><b>${j[0]}</b> - ${j[1]}</p>`).join("");
+    }
+
+    function showSettings() {
+      document.getElementById("settings").style.display = "block";
+      document.getElementById("output").innerHTML = "";
+      document.getElementById("newsCount").value = settings.newsCount;
+      document.getElementById("jobsCount").value = settings.jobsCount;
+      document.getElementById("aiText").value = settings.aiText;
+    }
+
+    function hideSettings() {
+      document.getElementById("settings").style.display = "none";
+    }
+
+    function saveSettings(event) {
+      event.preventDefault();
+      settings.newsCount = parseInt(document.getElementById("newsCount").value, 10);
+      settings.jobsCount = parseInt(document.getElementById("jobsCount").value, 10);
+      settings.aiText = document.getElementById("aiText").value;
+      hideSettings();
+      document.getElementById("output").innerHTML = "<i>Settings saved.</i>";
+    }
+  </script>
+</body>
+</html>
