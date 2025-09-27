@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from .analyze_service import analyze_text
+from .search_service import search_news
 
 app = FastAPI()
 
@@ -14,13 +16,8 @@ app.add_middleware(
 
 @app.get("/news")
 def get_news(count: int = Query(2, ge=1)):
-    all_news = [
-        ["Test News 1", "Description 1", "https://example.com/1"],
-        ["Test News 2", "Description 2", "https://example.com/2"],
-        ["Test News 3", "Description 3", "https://example.com/3"],
-        ["Test News 4", "Description 4", "https://example.com/4"],
-    ]
-    return {"news": all_news[:count]}
+    news = search_news(count)
+    return {"news": news}
 
 @app.get("/jobs")
 def get_jobs(count: int = Query(2, ge=1)):
@@ -36,4 +33,5 @@ def get_jobs(count: int = Query(2, ge=1)):
 async def analyze(request: Request):
     data = await request.json()
     text = data.get("text", "")
-    return {"result": f"Test analysis of: {text[:30]}..."}
+    result = await analyze_text(text)
+    return {"result": result}
