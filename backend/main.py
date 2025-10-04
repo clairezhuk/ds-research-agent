@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .analyze_service import analyze_text
-from .search_service import search_news
+from .search_news_service import search_news
 
 app = FastAPI()
 
